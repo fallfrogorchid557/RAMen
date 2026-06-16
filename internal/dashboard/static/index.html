@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAMen Dashboard</title>
+<style>
+  :root { --bg:#0f1115; --panel:#171a21; --accent:#ff8a3d; --text:#e6e6e6; --muted:#8a8f99; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         background:var(--bg); color:var(--text); }
+  header { padding:18px 24px; border-bottom:1px solid #232733; display:flex; align-items:center; gap:12px; }
+  header h1 { font-size:20px; margin:0; }
+  header .tag { color:var(--muted); font-size:13px; }
+  .accent { color:var(--accent); }
+  main { padding:24px; max-width:1100px; margin:0 auto; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
+  .card { background:var(--panel); border:1px solid #232733; border-radius:10px; padding:16px; }
+  .card .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  .card .value { font-size:26px; margin-top:6px; }
+  .panel { background:var(--panel); border:1px solid #232733; border-radius:10px; padding:16px; }
+  .panel h2 { font-size:14px; margin:0 0 12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  input { background:#0f1115; border:1px solid #2b303b; color:var(--text); padding:8px 10px;
+          border-radius:6px; width:240px; font-family:inherit; }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; }
+  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid #232733; }
+  th { color:var(--muted); font-weight:normal; }
+  .type { color:var(--accent); }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🍜 RAM<span class="accent">en</span></h1>
+  <span class="tag">live dashboard &mdash; built for AI agents</span>
+</header>
+<main>
+  <div class="cards">
+    <div class="card"><div class="label">Keys</div><div class="value" id="keys">–</div></div>
+    <div class="card"><div class="label">Cache hit ratio</div><div class="value" id="ratio">–</div></div>
+    <div class="card"><div class="label">Hits / Misses</div><div class="value" id="hm">–</div></div>
+    <div class="card"><div class="label">Memory</div><div class="value" id="mem">–</div></div>
+    <div class="card"><div class="label">Clients</div><div class="value" id="clients">–</div></div>
+    <div class="card"><div class="label">Commands</div><div class="value" id="cmds">–</div></div>
+    <div class="card"><div class="label">Uptime</div><div class="value" id="uptime">–</div></div>
+  </div>
+  <div class="panel">
+    <h2>Key browser</h2>
+    <input id="match" placeholder="match pattern, e.g. user:*" value="*">
+    <span class="muted" id="note"></span>
+    <table>
+      <thead><tr><th>Key</th><th>Type</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+
+function fmtBytes(b) {
+  const u = ["B","KB","MB","GB"]; let i = 0;
+  while (b >= 1024 && i < u.length-1) { b /= 1024; i++; }
+  return b.toFixed(i ? 1 : 0) + " " + u[i];
+}
+function fmtDuration(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return (h?h+"h ":"") + (m?m+"m ":"") + sec + "s";
+}
+
+async function refreshStats() {
+  try {
+    const s = await (await fetch("/api/stats")).json();
+    $("keys").textContent = s.keys;
+    $("ratio").textContent = (s.cache_hit_ratio*100).toFixed(1) + "%";
+    $("hm").textContent = s.cache_hits + " / " + s.cache_misses;
+    $("mem").textContent = fmtBytes(s.memory_bytes);
+    $("clients").textContent = s.connected_clients;
+    $("cmds").textContent = s.commands;
+    $("uptime").textContent = fmtDuration(s.uptime_seconds);
+  } catch (e) { /* server may be restarting */ }
+}
+
+async function refreshKeys() {
+  try {
+    const m = encodeURIComponent($("match").value || "*");
+    const d = await (await fetch("/api/keys?match=" + m)).json();
+    $("rows").innerHTML = (d.keys || []).map(k =>
+      `<tr><td>${escapeHtml(k.key)}</td><td class="type">${k.type}</td></tr>`).join("");
+    $("note").textContent = d.truncated ? " (showing first 500)" : "";
+  } catch (e) {}
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+$("match").addEventListener("input", () => { clearTimeout(window._t); window._t = setTimeout(refreshKeys, 200); });
+refreshStats(); refreshKeys();
+setInterval(refreshStats, 1000);
+setInterval(refreshKeys, 2000);
+</script>
+</body>
+</html>
